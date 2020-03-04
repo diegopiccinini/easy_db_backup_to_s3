@@ -1,4 +1,8 @@
 # Easy Database Backup to S3
+## Description
+Easy way to upload sql.gz files to S3 bucket with this structure:
+ - clustername/year/month/mday/hour/database_name.sql.gz
+
 ## Requirements
 Install aws console command, and add the credentials to the user in order to upload to s3 bucket.
 ## Ruby Version
