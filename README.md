@@ -34,5 +34,8 @@ postgreSQL:
   dbs:
     database1: cluster1
 ```
-3. Setup a cronjob running backups.rb file
-
+3. Setup a cronjob running backups.rb file. Sample:
+```bash
+5 2 * * * ~/easy_db_backup_to_s3/remove_log.rb > ~/easy_db_backup_to_s3/log/remove.log 2>&1
+15 2 * * * ~/easy_db_backup_to_s3/backups.rb > ~/easy_db_backup_to_s3/log/backups.log 2>&1
+```
