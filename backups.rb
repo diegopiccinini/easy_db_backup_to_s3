@@ -3,7 +3,7 @@
 require 'date'
 require 'yaml'
 
-PROJECT_DIR = "#{File.expand_path(__dir__)}/easy_db_backup_to_s3"
+PROJECT_DIR = "#{File.expand_path(__dir__)}"
 BASEDIR = "#{PROJECT_DIR}/backups"
 S3_BUCKET = 'prod-databases-backups'
 
