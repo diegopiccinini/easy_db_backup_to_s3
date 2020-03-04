@@ -7,7 +7,7 @@ PROJECT_DIR = "#{File.expand_path(__dir__)}"
 BASEDIR = "#{PROJECT_DIR}/backups"
 S3_BUCKET = 'prod-databases-backups'
 
-def make_dirs
+def make_dirs(conns)
   `mkdir #{BASEDIR}` unless Dir.exist?(BASEDIR)
   hour = DateTime.now.strftime '%Y/%m/%d/%H'
   dirs = conns.keys.map { |x| "#{BASEDIR}/#{x}/#{hour}" }
@@ -16,7 +16,7 @@ def make_dirs
 end
 
 def backups(conns, dbs)
-  hour = make_dirs
+  hour = make_dirs(conns)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
     s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
@@ -33,7 +33,7 @@ def upload_and_remove
 end
 
 def pg_backups(conns, dbs)
-  hour = make_dirs
+  hour = make_dirs(conns)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
