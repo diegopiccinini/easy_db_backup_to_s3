@@ -47,7 +47,6 @@ def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
   backups(data['mysql']['conns'], data['mysql']['dbs'])
   pb_backups(data['postgreSQL']['conns'], data['posgreSQL']['dbs'])
-  pg_backups(conns, dbs)
   upload_and_remove
 end
 
