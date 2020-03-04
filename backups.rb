@@ -15,7 +15,8 @@ def make_dirs(conns)
   hour
 end
 
-def backups(conns, dbs)
+def backups(data)
+  conns, dbs = data['conns'], data['dbs']
   hour = make_dirs(conns)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
@@ -32,7 +33,8 @@ def upload_and_remove
   system "rm -rf #{BASEDIR}/*"
 end
 
-def pg_backups(conns, dbs)
+def pg_backups(data)
+  conns, dbs = data['conns'], data['dbs']
   hour = make_dirs(conns)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
@@ -45,8 +47,8 @@ end
 
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
-  backups(data['mysql']['conns'], data['mysql']['dbs'])
-  pb_backups(data['postgreSQL']['conns'], data['posgreSQL']['dbs'])
+  backups(data['mysql'])
+  pb_backups(data['postgreSQL'])
   upload_and_remove
 end
 
