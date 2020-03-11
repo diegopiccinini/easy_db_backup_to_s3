@@ -32,7 +32,7 @@ def md5(file)
 end
 
 def gpg(file)
-  system "gpg --encrypt --sign --armor -r #{GPG_EMAIL} #{file}"
+  system "gpg --encrypt --sign --armor -r #{$gpg_email} #{file}"
 end
 
 def final_tasks(s, file)
@@ -62,7 +62,7 @@ end
 
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
-  GPG_EMAIL = data['gpg_email']
+  $gpg_email = data['gpg_email']
   backups(data['mysql'])
   pg_backups(data['postgreSQL'])
   upload_and_remove
