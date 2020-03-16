@@ -3,6 +3,8 @@
 require 'date'
 require 'yaml'
 
+Dir.glob(File.join('.', 'lib', '**', '*.rb'), &method(:require))
+
 PROJECT_DIR = "#{File.expand_path(__dir__)}"
 BASEDIR = "#{PROJECT_DIR}/backups"
 S3_BUCKET = 'prod-databases-backups'
@@ -16,14 +18,17 @@ def make_dirs(conns)
 end
 
 def backups(data)
+  dynamo = Database.new
   conns, dbs = data['conns'], data['dbs']
   hour = make_dirs(conns)
+  hourint = hour.gsub('/','')
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
     s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
     s = "mysqldump #{s.join(' ')} --skip-dump-date --skip-comments #{db} > #{file}"
     final_tasks(s, file)
+    dynamo.item(db, hourint, false)
   end
 end
 
