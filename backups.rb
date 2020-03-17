@@ -58,7 +58,7 @@ def pg_backups(data)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
-    s = "PGPASSWORD=#{conn_data['password']} pg_dump -U#{conn_data['U']}"
+    s = "PGPASSWORD=#{conn_data['password']} pg_dump -o -U#{conn_data['U']}"
     s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
     s << " -d#{db} > #{file}"
     final_tasks(s, file)

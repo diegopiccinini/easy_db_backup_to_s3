@@ -57,7 +57,7 @@ def pg_restore(conn_data, db , file, original_db)
   s = "#{conn} #{db} < #{file}"
   system s
 
-  s = "PGPASSWORD=#{conn_data['password']} pg_dump -U#{conn_data['U']}"
+  s = "PGPASSWORD=#{conn_data['password']} pg_dump -o -U#{conn_data['U']}"
   s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
   s << " -d#{db} > #{file}.test"
   system s
