@@ -7,7 +7,6 @@ Dir.glob(File.join('.', 'lib', '**', '*.rb'), &method(:require))
 
 PROJECT_DIR = "#{File.expand_path(__dir__)}"
 BASEDIR = "#{PROJECT_DIR}/backups"
-S3_BUCKET = 'prod-databases-backups'
 
 def make_dirs(conns)
   `mkdir #{BASEDIR}` unless Dir.exist?(BASEDIR)
@@ -49,7 +48,7 @@ def final_tasks(s, file)
 end
 
 def upload_and_remove
-  system "/usr/local/bin/aws s3 sync #{BASEDIR} s3://#{S3_BUCKET}"
+  system "/usr/local/bin/aws s3 sync #{BASEDIR} s3://#{$s3_bucket}"
   system "rm -rf #{BASEDIR}/*"
 end
 
@@ -59,7 +58,9 @@ def pg_backups(data)
   dbs.each_pair do |db, conn|
     conn_data = conns[conn]
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
-    s = "PGPASSWORD=#{conn_data['password']} pg_dump -U#{conn_data['U']} -h#{conn_data['h']} -d#{db} > #{file}"
+    s = "PGPASSWORD=#{conn_data['password']} pg_dump -U#{conn_data['U']}"
+    s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
+    s << " -d#{db} > #{file}"
     final_tasks(s, file)
     $dynamo.item(db, hourint, false)
   end
@@ -68,6 +69,7 @@ end
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
   $gpg_email = data['gpg_email']
+  $s3_bucket = data['s3_bucket']
   $dynamo = Database.new
   backups(data['mysql'])
   pg_backups(data['postgreSQL'])

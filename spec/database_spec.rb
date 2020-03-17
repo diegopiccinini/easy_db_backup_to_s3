@@ -35,5 +35,13 @@ describe Database do
       it { expect(last['tested']).to eq false }
       it { expect(first['tested']).to eq true }
     end
+    describe '#upate_item' do
+      let(:item) { first }
+      before do
+        subject.update_item(item, { 'new_atr' => { value: 'new_value' , action: 'PUT' }})
+      end
+      let(:read) { subject.item(item['database'], item['datehour']) }
+      it { expect(read.item).to eq 'new_value' }
+    end
   end
 end

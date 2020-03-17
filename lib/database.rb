@@ -11,9 +11,9 @@ class Database
     @table = Aws::DynamoDB::Table.new('backups', client)
   end
 
-  def item(db, datehour, tested = nil)
+  def item(db, datehour, tested = nil, extra_data = {})
     key = { database: db, datehour: datehour }
-    tested.nil? ? read(key) : write(key, tested)
+    tested.nil? ? read(key) : write(key, tested, extra_data)
   end
 
   def last(db)
@@ -22,6 +22,11 @@ class Database
 
   def first(db)
     sort(db).items.first
+  end
+
+  def update_item(k, extra_vars)
+    @table.update_item({ key: { 'database' => k['database'], 'datehour' => k['datehour'] },
+                         attribute_updates: extra_vars })
   end
 
   private
@@ -34,14 +39,14 @@ class Database
     )
   end
 
-  def write(key, tested = false)
+  def write(key, tested = false, extra_data = {})
     @result = table.put_item(
       item: {
         'database' => key[:database],
         'datehour' => key[:datehour],
         'tested' => tested,
         'updated_at' => DateTime.now.to_s
-      }
+      }.merge(extra_data)
     )
   end
 

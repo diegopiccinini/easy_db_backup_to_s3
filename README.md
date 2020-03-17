@@ -37,6 +37,9 @@ postgreSQL:
       U: username
   dbs:
     database1: cluster1
+
+gpg_email: email@to_sing.com
+s3_bucket: name-of-the-bucket
 ```
 3. Setup a cronjob running backups.rb file. Sample:
 ```bash
