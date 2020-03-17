@@ -16,31 +16,53 @@ def make_dir(conn, db)
 end
 
 def hour
-    datehour = $item['datehour'].to_i.to_s
-    "#{datehour[0..3]}/#{datehour[4..5]}/#{datehour[6..7]}/#{datehour[8..9]}"
+  datehour = $item['datehour'].to_i.to_s
+  "#{datehour[0..3]}/#{datehour[4..5]}/#{datehour[6..7]}/#{datehour[8..9]}"
 end
 
-def backups(data)
+def backups(data, restore = 'mysql')
   conns, dbs = data['conns'], data['dbs']
   dbs.each_pair do |db, conn|
     $item = $dynamo.last(db)
     dir = make_dir(conn, db)
     db_base = "#{conn}/#{hour}/#{db}"
     download(db_base, db, dir)
-    system "gzip -d #{dir}/#{db}.sql.asc.gz"
     file = "#{dir}/#{db}.sql.asc"
+    system "gzip -d #{file}.gz"
     update_item('md5sum_match_asc_file', true) if checkmd5(file)
     gpg(file)
     file = "#{dir}/#{db}.sql"
     update_item('md5sum_match_sql_file', true) if checkmd5(file)
     conn_data = conns[conn]
-    s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
-    `mysql #{s.join(' ')} -e 'CREATE DATABASE #{db}_test;'`
-    `mysql #{s.join(' ')} #{db}_test < #{file}`
-    `mysqldump #{s.join(' ')} --skip-dump-date --skip-comments #{db}_test > #{file}.test`
-    `mysql #{s.join(' ')} -e 'DROP DATABASE #{db}_test;'`
+    db = "#{db}_test"
+    mysql_restore(conn_data, db, file) if restore == 'mysql'
+    pg_restore(conn_data, db, file) if restore == 'pg'
     update_item('tested', true) if checkmd5(file, "#{file}.test")
   end
+end
+
+def mysql_restore(conn_data, db , file)
+  s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
+  `mysql #{s.join(' ')} -e 'CREATE DATABASE #{db};'`
+  `mysql #{s.join(' ')} #{db} < #{file}`
+  `mysqldump #{s.join(' ')} --skip-dump-date --skip-comments #{db} > #{file}.test`
+  `mysql #{s.join(' ')} -e 'DROP DATABASE #{db};'`
+end
+
+def pg_restore(conn_data, db , file)
+  conn = "PGPASSWORD=#{conn_data['password']} psql -U#{conn_data['U']}"
+  conn << " -h#{conn_data['h']} " if conn_data.has_key?('h')
+  s = "#{conn} -c 'CREATE DATABASE #{db};' "
+  system s
+  s = "#{conn} #{db} < #{file}"
+  system s
+
+  s = "PGPASSWORD=#{conn_data['password']} pg_dump -U#{conn_data['U']}"
+  s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
+  s << " -d#{db} > #{file}.test"
+  system s
+  s = "#{conn} -c 'DROP DATABASE #{db};' "
+  system s
 end
 
 def update_item(attr, value)
@@ -48,21 +70,8 @@ def update_item(attr, value)
   $dynamo.update_item($item, extra_vars)
 end
 
-def md5(file)
-  system "md5sum #{file} > #{file}.md5sum"
-end
-
 def gpg(file)
   system "gpg --decrypt #{file} > #{file[0..-5]}"
-end
-
-def final_tasks(s, file)
-  system s
-  md5(file)
-  gpg(file)
-  md5("#{file}.asc")
-  system "gzip #{file}.asc"
-  system "rm #{file}"
 end
 
 def download(db_base, db, dir)
@@ -77,19 +86,12 @@ def checkmd5(file, origin = nil)
   a.split.first == b.split.first
 end
 
-def pg_backups(data)
-  dbs.each_pair do |db, conn|
-    item = $dynamo.last(db)
-    p item
-  end
-end
-
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
   $s3_bucket = data['s3_bucket']
   $dynamo = Database.new
   backups(data['mysql'])
-  #pg_backups(data['postgreSQL'])
+  backups(data['postgreSQL'], 'pg')
   system "rm -rf #{BASEDIR}/*"
 end
 
