@@ -34,7 +34,6 @@ class Database
   def read(key)
     @result = table.get_item(
       key: key,
-      attributes_to_get: ['tested', 'updated_at'],
       consistent_read: true
     )
   end
