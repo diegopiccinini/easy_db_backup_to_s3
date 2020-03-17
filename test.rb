@@ -34,9 +34,9 @@ def backups(data, restore = 'mysql')
     file = "#{dir}/#{db}.sql"
     update_item('md5sum_match_sql_file', true) if checkmd5(file)
     conn_data = conns[conn]
-    db = "#{db}_test"
-    mysql_restore(conn_data, db, file) if restore == 'mysql'
-    pg_restore(conn_data, db, file) if restore == 'pg'
+    db_test = "#{db}_test"
+    mysql_restore(conn_data, db_test, file) if restore == 'mysql'
+    pg_restore(conn_data, db_test, file, db) if restore == 'pg'
     update_item('tested', true) if checkmd5(file, "#{file}.test")
   end
 end
@@ -49,10 +49,10 @@ def mysql_restore(conn_data, db , file)
   `mysql #{s.join(' ')} -e 'DROP DATABASE #{db};'`
 end
 
-def pg_restore(conn_data, db , file)
+def pg_restore(conn_data, db , file, original_db)
   conn = "PGPASSWORD=#{conn_data['password']} psql -U#{conn_data['U']}"
   conn << " -h#{conn_data['h']} " if conn_data.has_key?('h')
-  s = "#{conn} -c 'CREATE DATABASE #{db};' "
+  s = "#{conn} #{original_db} -c 'CREATE DATABASE #{db};' "
   system s
   s = "#{conn} #{db} < #{file}"
   system s
@@ -61,7 +61,7 @@ def pg_restore(conn_data, db , file)
   s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
   s << " -d#{db} > #{file}.test"
   system s
-  s = "#{conn} -c 'DROP DATABASE #{db};' "
+  s = "#{conn} #{original_db} -c 'DROP DATABASE #{db};' "
   system s
 end
 
