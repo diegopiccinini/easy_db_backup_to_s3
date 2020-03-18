@@ -37,18 +37,16 @@ def backups(data, restore = 'mysql')
     db_test = "#{db}_test"
     mysql_restore(conn_data, db_test, file) if restore == 'mysql'
     pg_restore(conn_data, db_test, file, db) if restore == 'pg'
-    system "sort #{file} > #{file}.sort"
-    system "sort #{file}.test > #{file}.test.sort"
-    update_item('tested', true) if checkmd5_two("#{file}.sort", "#{file}.test.sort")
   end
 end
 
 def mysql_restore(conn_data, db , file)
   s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
   `mysql #{s.join(' ')} -e 'CREATE DATABASE #{db};'`
-  `mysql #{s.join(' ')} #{db} < #{file}`
+  `mysql #{s.join(' ')} --comments #{db} < #{file}`
   `mysqldump #{s.join(' ')} --skip-dump-date --skip-comments #{db} > #{file}.test`
   `mysql #{s.join(' ')} -e 'DROP DATABASE #{db};'`
+  update_item('tested', true) if checkmd5(file, "#{file}.test")
 end
 
 def pg_restore(conn_data, db , file, original_db)
@@ -65,7 +63,9 @@ def pg_restore(conn_data, db , file, original_db)
   system s
   s = "#{conn} #{original_db} -c 'DROP DATABASE #{db};' "
   system s
-
+  system "sort #{file} > #{file}.sort"
+  system "sort #{file}.test > #{file}.test.sort"
+  update_item('tested', true) if checkmd5_two("#{file}.sort", "#{file}.test.sort")
 end
 
 def update_item(attr, value)
@@ -83,8 +83,8 @@ def download(db_base, db, dir)
   system "/usr/local/bin/aws s3 cp s3://#{$s3_bucket}/#{db_base}.sql.md5sum #{dir}/#{db}.sql.md5sum"
 end
 
-def checkmd5(file)
-  a = `md5sum #{file}`
+def checkmd5(file, testfile = nil)
+  a = `md5sum #{testfile || file}`
   b = `cat #{file}.md5sum`
   a.split.first == b.split.first
 end
