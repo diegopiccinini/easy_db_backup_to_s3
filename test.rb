@@ -37,7 +37,9 @@ def backups(data, restore = 'mysql')
     db_test = "#{db}_test"
     mysql_restore(conn_data, db_test, file) if restore == 'mysql'
     pg_restore(conn_data, db_test, file, db) if restore == 'pg'
-    update_item('tested', true) if checkmd5(file, "#{file}.test")
+    system "sort #{file} > #{file}.sort"
+    system "sort #{file}.test > #{file}.test.sort"
+    update_item('tested', true) if checkmd5_two("#{file}.sort", "#{file}.test.sort")
   end
 end
 
@@ -63,6 +65,7 @@ def pg_restore(conn_data, db , file, original_db)
   system s
   s = "#{conn} #{original_db} -c 'DROP DATABASE #{db};' "
   system s
+
 end
 
 def update_item(attr, value)
@@ -80,12 +83,17 @@ def download(db_base, db, dir)
   system "/usr/local/bin/aws s3 cp s3://#{$s3_bucket}/#{db_base}.sql.md5sum #{dir}/#{db}.sql.md5sum"
 end
 
-def checkmd5(file, origin = nil)
-  a = `md5sum #{origin || file}`
+def checkmd5(file)
+  a = `md5sum #{file}`
   b = `cat #{file}.md5sum`
   a.split.first == b.split.first
 end
 
+def checkmd5_two(file, file2)
+  a = `md5sum #{file}`
+  b = `md5sum #{file2}`
+  a.split.first == b.split.first
+end
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
   $s3_bucket = data['s3_bucket']
