@@ -71,8 +71,8 @@ def main
   $gpg_email = data['gpg_email']
   $s3_bucket = data['s3_bucket']
   $dynamo = Database.new
-  backups(data['mysql'])
-  pg_backups(data['postgreSQL'])
+  backups(data['mysql']) if data.has_key?('mysql')
+  pg_backups(data['postgreSQL']) if data.has_key?('postgreSQL')
   upload_and_remove
 end
 

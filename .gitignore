@@ -2,6 +2,7 @@ config/
 log/
 backups/
 tests/
+restore/
 
 .byebug_history
 *.swp

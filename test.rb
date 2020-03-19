@@ -94,12 +94,13 @@ def checkmd5_two(file, file2)
   b = `md5sum #{file2}`
   a.split.first == b.split.first
 end
+
 def main
   data = YAML.load_file "#{PROJECT_DIR}/config/databases.yml"
   $s3_bucket = data['s3_bucket']
   $dynamo = Database.new
-  backups(data['mysql'])
-  backups(data['postgreSQL'], 'pg')
+  backups(data['mysql']) if data.has_key?('mysql')
+  backups(data['postgreSQL'], 'pg') if data.has_key?('postgreSQL')
   system "rm -rf #{BASEDIR}/*"
 end
 
