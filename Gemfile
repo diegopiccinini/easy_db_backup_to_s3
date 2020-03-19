@@ -3,6 +3,7 @@
 source 'https://rubygems.org'
 
 gem 'aws-sdk-dynamodb', '~> 1.41'
+gem 'slack-notifier', '~> 2.3'
 
 group :development, :test do
   gem 'byebug', '~> 11.0'
