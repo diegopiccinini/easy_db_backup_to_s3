@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe Test do
   let(:message) do
-    "Fail test *tested*\nDb: *test2*\nDateHour: *10001*\n"
+    "Test *tested* failed\nDb: *test2*\nDateHour: *10001*\n"
   end
   describe '#update_item' do
     let(:dynamo) { Database.new }

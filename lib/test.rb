@@ -79,7 +79,7 @@ class Test
     extra_vars = { attr => { value: value, action: 'PUT' } }
     @dynamo.update_item(@item, extra_vars)
     if @slack_url && !value
-      message = "Fail test *#{attr}*\n"
+      message = "Test *#{attr}* failed\n"
       message << "Db: *#{@item['database']}*\n"
       message << "DateHour: *#{@item['datehour'].to_i}*\n"
       send_message(message)
