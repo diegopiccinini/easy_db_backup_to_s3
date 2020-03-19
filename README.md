@@ -10,6 +10,7 @@ Install aws console command, and add the credentials to the user in order to upl
 ## Steps
 
 1. clone the repository and install rvm ruby 2.5.0
+
    1.1.
 
    ```bash
