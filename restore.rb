@@ -22,9 +22,11 @@ end
 
 def restore(data)
   conns = data[engine]['conns']
-  db = $dbs[engine][$db]
-  conn = data[engine]['dbs'][db]
-  $item = $dynamo.last(db)
+  db_conn = $dbs[engine][$db]
+  db = db_conn['db']
+  conn = db_conn['conn']
+  key = "#{conn}|#{db}"
+  $item = $dynamo.last(key)
   dir = make_dir(conn, db)
   db_base = "#{conn}/#{hour}/#{db}"
   download(db_base, db, dir)
@@ -107,9 +109,11 @@ def list(data, db_engine)
   puts "#{$db_engine.count}. #{db_engine}"
   $db_engine << db_engine
   $dbs[db_engine] = []
-  data['dbs'].each do |k, v|
-    puts "\t#{$dbs[db_engine].count}. #{k} (cluster: #{v})"
-    $dbs[db_engine] << k
+  data['dbs'].each do |db_conn|
+    db = db_conn['db']
+    conn = db_conn['conn']
+    puts "\t#{$dbs[db_engine].count}. #{db} (cluster: #{conn})"
+    $dbs[db_engine] << db_conn
   end
   puts
 end

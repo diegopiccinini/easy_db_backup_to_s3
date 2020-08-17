@@ -29,8 +29,11 @@ class Test
 
   def backups(data, restore = 'mysql')
     conns, dbs = data['conns'], data['dbs']
-    dbs.each_pair do |db, conn|
-      @item = @dynamo.last(db)
+    dbs.each do |db_conn|
+      db = db_conn['db']
+      conn = db_conn['conn']
+      key = "#{conn}|#{db}"
+      @item = @dynamo.last(key)
       dir = make_dir(conn, db)
       db_base = "#{conn}/#{hour}/#{db}"
       download(db_base, db, dir)

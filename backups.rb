@@ -20,13 +20,16 @@ end
 def backups(data)
   conns, dbs = data['conns'], data['dbs']
   hour, hourint = make_dirs(conns)
-  dbs.each_pair do |db, conn|
+  dbs.each do |db_conn|
+    db = db_conn['db']
+    conn = db_conn['conn']
     conn_data = conns[conn]
     s = conn_data.each_pair.map { |k, v| "-#{k}#{v}" }
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
     s = "mysqldump #{s.join(' ')} --skip-dump-date --skip-comments #{db} > #{file}"
     final_tasks(s, file)
-    $dynamo.item(db, hourint, false)
+    key = "#{conn}|#{db}"
+    $dynamo.item(key, hourint, false)
   end
 end
 
@@ -55,14 +58,17 @@ end
 def pg_backups(data)
   conns, dbs = data['conns'], data['dbs']
   hour, hourint = make_dirs(conns)
-  dbs.each_pair do |db, conn|
+  dbs.each_pair do |db_conn|
+    db = db_conn['db']
+    conn = db_conn['conn']
     conn_data = conns[conn]
     file = "#{BASEDIR}/#{conn}/#{hour}/#{db}.sql"
     s = "PGPASSWORD=#{conn_data['password']} pg_dump -o -U#{conn_data['U']}"
     s << " -h#{conn_data['h']} " if conn_data.has_key?('h')
     s << " -d#{db} > #{file}"
     final_tasks(s, file)
-    $dynamo.item(db, hourint, false)
+    key = "#{conn}|#{db}"
+    $dynamo.item(key, hourint, false)
   end
 end
 
