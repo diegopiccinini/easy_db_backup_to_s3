@@ -58,7 +58,7 @@ end
 def pg_backups(data)
   conns, dbs = data['conns'], data['dbs']
   hour, hourint = make_dirs(conns)
-  dbs.each_pair do |db_conn|
+  dbs.each do |db_conn|
     db = db_conn['db']
     conn = db_conn['conn']
     conn_data = conns[conn]
