@@ -1,6 +1,6 @@
 # Easy Database Backup to S3 
 ## Description
-This is a `PUBLIC REPOSITORY' of a open source shared tool to upload backups.
+This is a *PUBLIC REPOSITORY* of a open source shared tool to upload backups.
 Easy way to upload sql.gz files to S3 bucket with this structure:
  - clustername/year/month/mday/hour/database_name.sql.gz
 
